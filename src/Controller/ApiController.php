@@ -1,42 +1,48 @@
 <?php
 
 namespace App\Controller;
+
 use App\Entity\User;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+
+// use Symfony\Bridge\Doctrine\ManagerRegistry;
+
+// use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManagerInterface;
+// use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+// use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class LoginController
+class RegisterController extends AbstractController
 {
-    #[Route('/apis/login', name: 'api_login', methods:'POST')]
-    public function login(Request $request, UserPasswordEncoderInterface $encoder, JWTTokenManagerInterface $jwtManager): JsonResponse
+    #[Route('/api/register', name: 'api_register', methods:'POST')]
+    public function apiRegister(Request $request, ManagerRegistry $doctrine): JsonResponse
     {
+
+        // $token = $request->headers->get('Authorization');
+        // $token = str_replace('Bearer ', '', $token);
+
         $data = json_decode($request->getContent(), true);
 
-        $username = $data['username'] ?? null;
-        $password = $data['password'] ?? null;
+        // $errors = $this->validateRegistrationData($data);
+        // if(count($errors) > 0){
+        //     return new JsonResponse(['success' => false, 'errors' => $errors], 400);
+        // }
 
-        if (!$username || !$password) {
-            throw new BadCredentialsException();
-        }
+        // $user = new User();
 
-        $user = $this->getDoctrine()->getRepository(User::class)->findOneBy(['username' => $username]);
+        $user = new User();
+        // $token = $jwtManager->create($user);
+        $user->setEmail($data['username']);
+        $user->setPassword(password_hash($data['password'], PASSWORD_DEFAULT));
 
-        if (!$user) {
-            throw new BadCredentialsException();
-        }
+        $em = $doctrine->getManager();
+        $em->persist($user);
+        $em->flush();
 
-        $isValid = $encoder->isPasswordValid($user, $password);
-
-        if (!$isValid) {
-            throw new BadCredentialsException();
-        }
-
-        $token = $jwtManager->create($user);
-
-        return new JsonResponse(['token' => $token]);
+        return new JsonResponse(['success' => true]);
+        // return new JsonResponse(['token' => $token]);
     }
 }

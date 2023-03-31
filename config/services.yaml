@@ -6,6 +6,11 @@
 parameters:
 
 services:
+    App\Controller\RegisterController:
+        autowire: true
+        
+    Lexik\Bundle\JWTAuthenticationBundle\Services\JWTManagerInterface:
+        alias: lexik_jwt_authentication.jwt_manager
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
